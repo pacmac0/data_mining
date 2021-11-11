@@ -1,7 +1,13 @@
-
+import preprocessor
+import algo_lib
 
 def main():
-    print("Starting...")
+    pre_proc = preprocessor()
+    shingler = algo_lib.Shingling()
+
+
+    texts = pre_proc.load_texts_from_dir()
+
 
 
 
