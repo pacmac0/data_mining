@@ -7,16 +7,29 @@ class  Shingling:
         self.k = k
 
     def create_shingles(self, doc, hashed=True):
-        shingles = [doc[idx:(idx + self.k)] for idx in range(len(doc) - self.k + 1)] # get unique shingles
-        if hashed:
-            shingles_hashed = [self.get_shingle_hash(shingle) for shingle in shingles]
-        return shingles, shingles_hashed
+        return set([self.get_shingle_hash(doc[idx:(idx + self.k)]) for idx in range(len(doc) - self.k + 1)]) # get unique shingles
 
     def  get_shingle_hash(self, shingle):
         return hash(shingle)
     
-    def create_characteristic_matrix(self):
-        print()
+    def create_characteristic_matrix(self, documents):
+        shingles_per_doc = []
+        # create all shingles
+        for doc_id, doc in enumerate(documents):
+            doc_shingles_hashed = self.create_shingles(doc)    
+            shingles_per_doc.append(doc_shingles_hashed)
+
+        unique_shingles = list(set([sh for sh in list(itertools.chain(*shingles_per_doc))]))
+        shingle_id_map  = {sh:idx for idx, sh in enumerate(unique_shingles)}
+
+        num_docs, num_shingles = len(documents), len(unique_shingles)
+        data = np.zeros((num_shingles,num_docs),  dtype=bool)
+        for doc_id, doc_shingle_list in enumerate(shingles_per_doc):
+            for sh in doc_shingle_list:
+                shingle_idx = shingle_id_map.get(sh)
+                data[shingle_idx][doc_id] = 1
+        characteristic_matrix = pd.DataFrame(data=data,  index=list(shingle_id_map), columns=range(num_docs))
+        return characteristic_matrix
 
 class CompareSets:
     @staticmethod
@@ -30,33 +43,13 @@ class MinHashing:
         self.matrix = matrix
         self.num_signatures = num_signatures
 
-    x = 
+    
 
 documents = ["abcab","acab", "aabcbb"]
 shingler = Shingling(2)
-
-shingles_per_doc = []
-# create all shingles
-for doc_id, doc in enumerate(documents):
-    doc_shingles, doc_shingles_hashed = shingler.create_shingles(doc)    
-    shingles_per_doc.append(list(zip(doc_shingles_hashed, doc_shingles)))
-
-unique_shingles = list(set([sh for sh in list(itertools.chain(*shingles_per_doc))]))
-shingle_id_map  = {sh:idx for idx, sh in enumerate(unique_shingles)}
-
-print(shingles_per_doc)
-num_docs, num_shingles = len(documents), len(unique_shingles)
-data = np.zeros((num_shingles,num_docs),  dtype=bool)
-for doc_id, doc_shingle_list in enumerate(shingles_per_doc):
-    for sh in doc_shingle_list:
-        shingle_idx = shingle_id_map.get(sh)
-        data[shingle_idx][doc_id] = 1
-
-
-
-characteristic_matrix = pd.DataFrame(data=data,  index=list(shingle_id_map), columns=range(num_docs))
-print(characteristic_matrix)
-# add shingles and docs to matrix
+matrix = shingler.create_characteristic_matrix(documents)
+print(matrix)
 
 cp = CompareSets()
-print( cp.jaccard_similarity(characteristic_matrix[:][0], characteristic_matrix[:][2]) )
+print(cp.jaccard_similarity(matrix[:][0], matrix[:][1]))
+
