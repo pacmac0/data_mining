@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import itertools
+import random
 
 class  Shingling:
     def __init__(self, k=10):
@@ -43,8 +44,34 @@ class MinHashing:
         self.matrix = matrix
         self.num_signatures = num_signatures
 
-    
+        c = 7919
 
+        if num_signatures > c:
+            print("Error")
+            break
+
+        a_len = 4
+        
+        a = list(range(0,a_len))
+        b = list(range(0,a_len))
+
+        for i in range(a_len):
+            a[i] = random.radnint(0,num_signatures)
+            b[i] = random.radnint(0,num_signatures) 
+            #generate matrix 
+
+        sign = []
+        for i in range(num_signatures):
+
+            for item in matrix:
+                h = (a[i]*item + b[i])%c
+            sign.append(h)
+
+        return sign
+        #h = (ax + b)%c
+
+
+    
 documents = ["abcab","acab", "aabcbb"]
 shingler = Shingling(2)
 matrix = shingler.create_characteristic_matrix(documents)
@@ -53,3 +80,4 @@ print(matrix)
 cp = CompareSets()
 print(cp.jaccard_similarity(matrix[:][0], matrix[:][1]))
 
+mini = MinHashing(matrix[:][0], 2)
