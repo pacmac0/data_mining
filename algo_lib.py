@@ -92,4 +92,46 @@ class CompareSignatures:
         equal_entries = (sig1 == sig2).sum()
         return equal_entries/num_entries
 
+class LSH:
+    def __init__(self, matrix, similarity, bands):
+        self.num_shingles, self.num_docs = matrix.shape
+        print(matrix.shape)
+        print(matrix.shape[1])
+        self.sim = similarity
+        self.bands = bands
+        self.matrix = matrix
 
+    #compare candidates against similarity and treashold
+
+    def return_docs(self):
+        found = []
+        sig_comp = CompareSignatures()
+
+        #test all possible pairs 
+        to_test = []
+        for i in range(self.num_docs):
+            for j in range(self.num_docs):
+                if (i,j) not in to_test:
+                    if (j,i) not in to_test:
+                        if j != i:
+                            to_test.append((i,j))
+
+        itter = 0
+        while itter < self.bands:
+            for pair in to_test:
+                
+                doc1 = pair[0]
+                doc2 = pair[1]
+
+                len1 = itter*self.num_shingles
+
+                itter += 1
+                len2 = (itter)*self.num_shingles
+
+                sig1 = self.matrix.iloc[len1:len2,doc1]
+                sig2 = self.matrix.iloc[len1:len2,doc2]
+                
+                if sig_comp.estimate_jaccard_similarity(sig1, sig2) > self.sim:
+                    found.append((doc1, doc2))
+
+        return found
