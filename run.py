@@ -31,7 +31,7 @@ print("Creating characteristic matrix...")
 char_matrix = shingling.create_characteristic_matrix(documents)
 print("Characteristic matrix created!")
 
-"""
+
 min_hashing = MinHashing(char_matrix, args.n_signature)
 print("Creating signature matrix...")
 signature_matrix, signature_dataframe = min_hashing.create_sig_matrix()
@@ -50,9 +50,8 @@ for doc_id in range(compare_against_first_x): # compare eachdoc against thefirst
     estimated_jaccard_similarity = signatureComperer.estimate_jaccard_similarity(signature_dataframe[:][0], \
                                                                                  signature_dataframe[:][doc_id])
     print("Exact similarity is: {}, estimates similarity is:{} \nDiffering by {}\n".format(jaccard_similarity, estimated_jaccard_similarity, (abs(jaccard_similarity-estimated_jaccard_similarity))))
-"""
 
 print("Running LSH...")
-lsh = LSH(char_matrix,args.sim_threshold, 2)
+lsh = LSH(signature_dataframe,args.sim_threshold, 2)
 found = lsh.return_docs()
 print(found)
