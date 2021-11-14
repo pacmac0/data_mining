@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import itertools
 import random
+from sympy import * # https://www.geeksforgeeks.org/python-simpy-nextprime-method/
 
 class  Shingling:
     def __init__(self, k=10):
@@ -42,33 +43,55 @@ class CompareSets:
 class MinHashing:
     def __init__(self, matrix, num_signatures):
         self.matrix = matrix
+        self.num_shingles, self.num_docs = matrix.shape
+        self.max_coef_value = len(matrix)-1 #2**32-1
         self.num_signatures = num_signatures
 
-        c = 7919
-
-        if num_signatures > c:
-            print("Error")
-            break
-
-        a_len = 4
+    def create_sig_matrix(self):
+        sig_matrix = np.full((self.num_signatures,self.num_docs), np.inf)
         
-        a = list(range(0,a_len))
-        b = list(range(0,a_len))
+        # create hashfunctions
+        c = nextprime(self.max_coef_value)
+        # coefficients a,b have to be different for each function, no acan be used double.
+        a_coefficients = []
+        b_coefficients = []
+        # select random values in hash value range for signature hash functions
+        while len(a_coefficients) <= self.num_signatures:
+            a = np.random.randint(self.max_coef_value)
+            if a not in a_coefficients:
+                a_coefficients.append(a)
+        while len(b_coefficients) <= self.num_signatures:
+            b = np.random.randint(self.max_coef_value)
+            if b not in b_coefficients:
+                b_coefficients.append(b)
 
-        for i in range(a_len):
-            a[i] = random.radnint(0,num_signatures)
-            b[i] = random.radnint(0,num_signatures) 
-            #generate matrix 
+        # use for book example
+        # a_coefficients = [1,3]
+        # b_coefficients = [1,1]
 
-        sign = []
-        for i in range(num_signatures):
+        # compute hashfunction values
+        hash_val_matrix = np.full((self.num_shingles,self.num_signatures),np.inf)
+        for func_idx in range(self.num_signatures):
+            for shingle_idx, shingle_hash in enumerate(self.matrix.index):
+                hash_val_matrix[shingle_idx][func_idx] = (a_coefficients[func_idx]* shingle_idx + b_coefficients[func_idx]) % c # maybe use shingle_hash instead of idx
+        # fill sig_matrix
+        for shingle_idx, hash_vals in enumerate(hash_val_matrix):
+            for doc_id in range(self.num_docs):
+                if self.matrix[self.matrix.columns[doc_id]][shingle_idx]:
+                    sig_matrix[:, doc_id] = np.where(hash_vals < sig_matrix[:, doc_id], hash_vals, sig_matrix[:, doc_id])
+                    
+        sig_df = pd.DataFrame(sig_matrix, index=range(self.num_signatures), columns=self.matrix.columns)
+        return sig_matrix, sig_df
 
-            for item in matrix:
-                h = (a[i]*item + b[i])%c
-            sign.append(h)
+    
+class CompareSignatures:
+    @staticmethod
+    def estimate_jaccard_similarity(sig1, sig2): #signatures are columns of the sig_matrix, representing a document
+        num_entries = len(sig1)
+        equal_entries = (sig1 == sig2).sum()
+        return equal_entries/num_entries
 
-        return sign
-        #h = (ax + b)%c
+
 
 
     
@@ -80,4 +103,25 @@ print(matrix)
 cp = CompareSets()
 print(cp.jaccard_similarity(matrix[:][0], matrix[:][1]))
 
-mini = MinHashing(matrix[:][0], 2)
+matrix.reset_index()
+print(matrix)
+
+
+data = [
+    [1,0,0,1],
+    [0,0,1,0],
+    [0,1,0,1],
+    [1,0,1,1],
+    [0,0,1,0],
+]
+test_matrix = pd.DataFrame(data, index=range(5), columns=['S1','S2','S3','S4'])
+minH = MinHashing(test_matrix, 2)
+sig_matrix, sig_df = minH.create_sig_matrix()
+print(sig_matrix)
+print(sig_df)
+
+
+sig1 = np.array([1,0,2,5,0,0,2,3,4,7])
+sig2 = np.array([1,0,2,4,8,0,2,1,4,7])
+sig_comp = CompareSignatures()
+print(sig_comp.estimate_jaccard_similarity(sig1, sig2))
