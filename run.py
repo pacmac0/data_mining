@@ -14,6 +14,7 @@ parser.add_argument('-sim-threshold', default=0.8, type=float, help='similarity 
 parser.add_argument('-comp-matrix', default=True, type=bool, help='Compare all documents against each other')
 parser.add_argument('-testing', default=True, type=bool, help='use test case')
 
+
 args = parser.parse_args()
 
 preprocessor = Preprocessor(TEXT_DIR = args.dataset_dir, \
