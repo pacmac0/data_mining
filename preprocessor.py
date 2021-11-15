@@ -19,7 +19,7 @@ class Preprocessor:
 
     def load_texts_from_dir(self):
         for count, file_name in enumerate(os.listdir(self.TEXT_DIR)):
-            if count <= self.MAX_DOC_COUNT:
+            if count < self.MAX_DOC_COUNT:
                 file_path = self.TEXT_DIR+"/"+file_name
                 with codecs.open(file_path, 'r', 'ISO-8859-1') as text_file:
                     text = reader = str(text_file.read())

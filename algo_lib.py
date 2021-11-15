@@ -1,8 +1,10 @@
 import numpy as np
 import pandas as pd
 import itertools
-import random
 from sympy import * # https://www.geeksforgeeks.org/python-simpy-nextprime-method/
+import math
+from collections import defaultdict
+
 
 class  Shingling:
     def __init__(self, k=10):
@@ -22,6 +24,7 @@ class  Shingling:
             shingles_per_doc.append(doc_shingles_hashed)
 
         unique_shingles = list(set([sh for sh in list(itertools.chain(*shingles_per_doc))]))
+        unique_shingles.sort()
         shingle_id_map  = {sh:idx for idx, sh in enumerate(unique_shingles)}
 
         num_docs, num_shingles = len(documents), len(unique_shingles)
@@ -93,45 +96,47 @@ class CompareSignatures:
         return equal_entries/num_entries
 
 class LSH:
-    def __init__(self, matrix, similarity, bands):
-        self.num_shingles, self.num_docs = matrix.shape
-        print(matrix.shape)
-        print(matrix.shape[1])
-        self.sim = similarity
-        self.bands = bands
-        self.matrix = matrix
+    def __init__(self, signatures, num_bands=50):
+        self.signatures = signatures
+        self.num_signatures, self.num_docs =  self.signatures.shape
+        # b*r = |sig| => b=50 , r=10, |sig|=500
+        # threshold = (1/b)^(1/r) => t=0.68
+        self.num_bands = num_bands
+        self.rows_per_band = math.ceil(self.num_signatures/self.num_bands)
+        self.threshold = (1/self.num_bands)**(1/self.rows_per_band)
+        
+        self.num_buckets = self.num_signatures*4 # TODO choose good number, maybe multiple of signeture length
+        self.comparer = CompareSignatures()
 
-    #compare candidates against similarity and treashold
+    def compare_candidate(self, candidate_tuple):
+        # get candidate signatures
+        can1 = self.signatures.values.T[candidate_tuple[0]]
+        can2 = self.signatures.values.T[candidate_tuple[1]]
+        similarity = self.comparer.estimate_jaccard_similarity(can1, can2)
+        threshold_passed = (similarity >= self.threshold)
+        return similarity
 
-    def return_docs(self):
-        found = []
-        sig_comp = CompareSignatures()
+    def find_candidates(self):
+        candidate_pairs = set()
+        buckets = [[set() for _ in range(self.num_buckets)] for _ in range(self.num_bands)]
 
-        #test all possible pairs 
-        to_test = []
-        for i in range(self.num_docs):
-            for j in range(self.num_docs):
-                if (i,j) not in to_test:
-                    if (j,i) not in to_test:
-                        if j != i:
-                            to_test.append((i,j))
+        # go through all bands by bucket
+        for band_idx in range(self.num_bands):
+            band = self.signatures[band_idx*self.rows_per_band:(band_idx+1)*self.rows_per_band]
+            # go through bands and append to bucket
+            for doc_id, col in enumerate(band.values.T): # transpose to go directly over the columns(signature chunks)
+                col_str = np.array2string(col.astype(int), precision=0, separator='')[1:-1]
+                bucket_id = hash(col_str) % self.num_buckets # hash column to assign to bucket of that band
+                buckets[band_idx][bucket_id].add(doc_id)
 
-        itter = 0
-        while itter < self.bands:
-            for pair in to_test:
-                
-                doc1 = pair[0]
-                doc2 = pair[1]
-
-                len1 = itter*self.num_shingles
-
-                itter += 1
-                len2 = (itter)*self.num_shingles
-
-                sig1 = self.matrix.iloc[len1:len2,doc1]
-                sig2 = self.matrix.iloc[len1:len2,doc2]
-                
-                if sig_comp.estimate_jaccard_similarity(sig1, sig2) > self.sim:
-                    found.append((doc1, doc2))
-
-        return found
+        # remove too small buckets
+        buckets = [[doc_set for doc_set in band_buckets if len(doc_set)>1] for band_buckets in buckets]
+        
+        # create candidate pairs from buckets
+        for band_bucket in buckets:
+            for bucket in band_bucket:
+                pairs = [p for p in itertools.combinations(bucket, 2)]
+                for pair in pairs:
+                    candidate_pairs.add(pair)
+        
+        return candidate_pairs

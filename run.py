@@ -4,7 +4,7 @@ from algo_lib import Shingling, CompareSets, MinHashing, CompareSignatures, LSH
 
 parser = argparse.ArgumentParser(description='Find similar documents.')
 parser.add_argument('-dataset-dir', default='dataset/sportsArticles/raw_data', help='path to a data directory')
-parser.add_argument('-n-documents', default=10, type=int, help='number of documents to read from dataset')
+parser.add_argument('-n-documents', default=15, type=int, help='number of documents to read from dataset')
 parser.add_argument('-k-shingles', default=10, type=int, help='construct shingles of character length k')
 parser.add_argument('-n-signature', default=500, type=int, help='build a minhash signature of length n')
 parser.add_argument('-sim-threshold', default=0.8, type=float, help='similarity threshold for retrieving documents')
@@ -51,7 +51,11 @@ for doc_id in range(compare_against_first_x): # compare eachdoc against thefirst
                                                                                  signature_dataframe[:][doc_id])
     print("Exact similarity is: {}, estimates similarity is:{} \nDiffering by {}\n".format(jaccard_similarity, estimated_jaccard_similarity, (abs(jaccard_similarity-estimated_jaccard_similarity))))
 
+
 print("Running LSH...")
-lsh = LSH(signature_dataframe,args.sim_threshold, 2)
-found = lsh.return_docs()
-print(found)
+lsh = LSH(signature_dataframe)
+candidate_pairs = lsh.find_candidates()
+for pair in candidate_pairs:
+    similarity = lsh.compare_candidate(pair)
+    print("DOC {} and DOC {} have similarity {}".format(pair[0], pair[1], similarity))
+print("LSH finished!")
