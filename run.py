@@ -2,13 +2,19 @@ import argparse
 from preprocessor import Preprocessor
 from algo_lib import Shingling, CompareSets, MinHashing, CompareSignatures, LSH
 
+n_docs = 15
+k_shingels = 10 
+n_signatures = 500
+sim_treashold = 0.8
+testing = True
+
 parser = argparse.ArgumentParser(description='Find similar documents.')
 parser.add_argument('-dataset-dir', default='dataset/sportsArticles/raw_data', help='path to a data directory')
-parser.add_argument('-n-documents', default=15, type=int, help='number of documents to read from dataset')
-parser.add_argument('-k-shingles', default=10, type=int, help='construct shingles of character length k')
-parser.add_argument('-n-signature', default=500, type=int, help='build a minhash signature of length n')
-parser.add_argument('-sim-threshold', default=0.8, type=float, help='similarity threshold for retrieving documents')
-parser.add_argument('-testing', default=True, type=bool, help='use test case')
+parser.add_argument('-n-documents', default=n_docs, type=int, help='number of documents to read from dataset')
+parser.add_argument('-k-shingles', default=k_shingels, type=int, help='construct shingles of character length k')
+parser.add_argument('-n-signature', default=n_signatures, type=int, help='build a minhash signature of length n')
+parser.add_argument('-sim-threshold', default=sim_treashold, type=float, help='similarity threshold for retrieving documents')
+parser.add_argument('-testing', default=testing, type=bool, help='use test case')
 
 args = parser.parse_args()
 
