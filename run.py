@@ -4,6 +4,7 @@ from algo_lib import Shingling, CompareSets, MinHashing, CompareSignatures, LSH
 import numpy as np
 import pandas as pd
 from tabulate import tabulate
+import time
 
 parser = argparse.ArgumentParser(description='Find similar documents.')
 parser.add_argument('-dataset-dir', default='dataset/sportsArticles/raw_data', help='path to a data directory')
@@ -24,28 +25,36 @@ preprocessor = Preprocessor(TEXT_DIR = args.dataset_dir, \
     punctuation=True)
 
 print("Loading documents...")
+start_time = time.time()
 if args.testing:
     preprocessor.load_test_cases()
 else:
     preprocessor.load_texts_from_dir()
 documents = preprocessor.corpus
-print("Documents loaded!")
+end_time = time.time()
+print("Documents loaded in {} seconds!".format(round(end_time-start_time,3)))
 
 shingling = Shingling(args.k_shingles)
 print("Creating characteristic matrix...")
+start_time = time.time()
 char_matrix = shingling.create_characteristic_matrix(documents)
-print("Characteristic matrix created!")
+end_time = time.time()
+print("Characteristic matrix created in {} seconds!".format(round(end_time-start_time,3)))
 
 
 min_hashing = MinHashing(char_matrix, args.n_signature)
 print("Creating signature matrix...")
+start_time = time.time()
 signature_matrix, signature_dataframe = min_hashing.create_sig_matrix()
-print("Signature matrix created!")
+end_time = time.time()
+print("Signature matrix created in {} seconds!".format(round(end_time-start_time,3)))
 
 
 setComparer = CompareSets()
 signatureComperer = CompareSignatures()
 
+print("Starting comparisons...")
+start_time = time.time()
 # compare all docs against each other
 if args.comp_matrix:
     num_compare_docs = len(documents)
@@ -70,12 +79,15 @@ else:
         estimated_jaccard_similarity = signatureComperer.estimate_jaccard_similarity(signature_dataframe[:][0], \
                                                                                     signature_dataframe[:][doc_id])
         print("results for document {}: \nExact similarity is: {}, estimates similarity is:{} \nDiffering by {}\n".format(doc_id, jaccard_similarity, estimated_jaccard_similarity, (abs(jaccard_similarity-estimated_jaccard_similarity))))
-
+end_time = time.time()
+print("Comparisons finnished after {} seconds!".format(round(end_time-start_time,3)))
 
 print("Running LSH...")
+start_time = time.time()
 lsh = LSH(signature_dataframe)
 candidate_pairs = lsh.find_candidates()
 for pair in candidate_pairs:
     similarity = lsh.compare_candidate(pair)
     print("DOC {} and DOC {} have similarity {}".format(pair[0], pair[1], similarity))
-print("LSH finished!")
+end_time = time.time()
+print("LSH finished after {} seconds!".format(round(end_time-start_time,3)))

@@ -32,8 +32,8 @@ DOC 0 and DOC 3 have similarity 0.801
 DOC 1 and DOC 3 have similarity 0.801
 DOC 5 and DOC 6 have similarity 0.808
 
-Example Interpretation: (Keep the high thrasholdin mind)
-DOC 0 and 1 are the sameexept for the first word leading to high similarity.
+Example Interpretation: (Keep the high threshold in mind)
+DOC 0 and 1 are the same except for the first word leading to high similarity.
 Doc 5 and 6 differ in a coupke lines and are therefore similar.
 Notice that no document combination of (0,1,2,3,4) and (5,6) is checked by LSH. 
 Each of these two sets has a different text as a base,from which changes were made. 
