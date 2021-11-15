@@ -1,0 +1,40 @@
+Document description:
+0: Original text from dataset
+1: Just added one word "EXTRA" in the verybeginning of the original text
+2: Added some characters at random in the text
+3: Added extra text of roughly 60 words in the end of the document
+4: Deleted the first paragraph of the original document(shortened)
+5: Complete different text from dataset
+6: Version of document_5 above, with some deleted lines
+
+Computed signatures with length 1000!
+The tables row and column index indicate the document IDs, the tuple in the cell has as a first entry the exact jaccard similarity from part 1 and as second entry the estimated jaccard similarity from the signatures of part2.
++----+--------------------------------+--------------------------------+--------------------------------+--------------------------------+--------------------------------+--------------------------------+--------------------------------+
+|    | 0                              | 1                              | 2                              | 3                              | 4                              | 5                              | 6                              |
+|----+--------------------------------+--------------------------------+--------------------------------+--------------------------------+--------------------------------+--------------------------------+--------------------------------|
+|  0 | (1.0, 1.0)                     | (0.996415770609319, 0.999)     | (0.7794577685088634, 0.766)    | (0.7969421882465361, 0.801)    | (0.5989208633093526, 0.617)    | (0.0018050541516245488, 0.002) | (0.001969995453856645, 0.002)  |
+|  1 | (0.996415770609319, 0.999)     | (1.0, 1.0)                     | (0.777027027027027, 0.765)     | (0.7946641257741782, 0.801)    | (0.5967741935483871, 0.616)    | (0.0018036588508116465, 0.002) | (0.001968205904617714, 0.002)  |
+|  2 | (0.7794577685088634, 0.766)    | (0.777027027027027, 0.765)     | (1.0, 1.0)                     | (0.6380708493384549, 0.629)    | (0.4921152800435019, 0.507)    | (0.0017873100983020554, 0.002) | (0.0019472738166566807, 0.002) |
+|  3 | (0.7969421882465361, 0.801)    | (0.7946641257741782, 0.801)    | (0.6380708493384549, 0.629)    | (1.0, 1.0)                     | (0.4773053033922599, 0.485)    | (0.0017112822393350446, 0.002) | (0.0018507972665148065, 0.002) |
+|  4 | (0.5989208633093526, 0.617)    | (0.5967741935483871, 0.616)    | (0.4921152800435019, 0.507)    | (0.4773053033922599, 0.485)    | (1.0, 1.0)                     | (0.0012690355329949238, 0.002) | (0.0013479359730412806, 0.002) |
+|  5 | (0.0018050541516245488, 0.002) | (0.0018036588508116465, 0.002) | (0.0017873100983020554, 0.002) | (0.0017112822393350446, 0.002) | (0.0012690355329949238, 0.002) | (1.0, 1.0)                     | (0.8010761454426871, 0.808)    |
+|  6 | (0.001969995453856645, 0.002)  | (0.001968205904617714, 0.002)  | (0.0019472738166566807, 0.002) | (0.0018507972665148065, 0.002) | (0.0013479359730412806, 0.002) | (0.8010761454426871, 0.808)    | (1.0, 1.0)                     |
++----+--------------------------------+--------------------------------+--------------------------------+--------------------------------+--------------------------------+--------------------------------+--------------------------------+
+
+Running LSH...
+The Rows per band and threshold are calculated from the formulas given in the book, and are as follows.
+Rows per band used: 20
+Threshold computed from values: 0.8223401594268891
+
+LSH finds the following documents to be potentially similar, and the jaccard similarity confirms this.
+DOC 0 and DOC 1 have similarity 0.999
+DOC 0 and DOC 3 have similarity 0.801
+DOC 1 and DOC 3 have similarity 0.801
+DOC 5 and DOC 6 have similarity 0.808
+
+Example Interpretation: (Keep the high thrasholdin mind)
+DOC 0 and 1 are the sameexept for the first word leading to high similarity.
+Doc 5 and 6 differ in a coupke lines and are therefore similar.
+Notice that no document combination of (0,1,2,3,4) and (5,6) is checked by LSH. 
+Each of these two sets has a different text as a base,from which changes were made. 
+Therefore it makes sense that these are very different and dont get checked by LSH.

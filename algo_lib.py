@@ -24,7 +24,7 @@ class  Shingling:
             shingles_per_doc.append(doc_shingles_hashed)
 
         unique_shingles = list(set([sh for sh in list(itertools.chain(*shingles_per_doc))]))
-        unique_shingles.sort()
+        unique_shingles.sort()# was mentioned but doesn't seem necessary
         shingle_id_map  = {sh:idx for idx, sh in enumerate(unique_shingles)}
 
         num_docs, num_shingles = len(documents), len(unique_shingles)
@@ -33,7 +33,7 @@ class  Shingling:
             for sh in doc_shingle_list:
                 shingle_idx = shingle_id_map.get(sh)
                 data[shingle_idx][doc_id] = 1
-        characteristic_matrix = pd.DataFrame(data=data,  index=list(shingle_id_map), columns=range(num_docs))
+        characteristic_matrix = pd.DataFrame(data=data, index=list(shingle_id_map), columns=range(num_docs))
         return characteristic_matrix
 
 class CompareSets:
@@ -104,6 +104,8 @@ class LSH:
         self.num_bands = num_bands
         self.rows_per_band = math.ceil(self.num_signatures/self.num_bands)
         self.threshold = (1/self.num_bands)**(1/self.rows_per_band)
+        print(f"Rows per band used: {self.rows_per_band}")
+        print(f"Threshold computed from values: {self.threshold}")
         
         self.num_buckets = self.num_signatures*4 # TODO choose good number, maybe multiple of signeture length
         self.comparer = CompareSignatures()
