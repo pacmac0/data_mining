@@ -54,3 +54,46 @@ class Apriori:
             self.L[k] = {itemset:C_k[itemset] for itemset in sorted(C_k) if self.check_support(C_k[itemset])}
         # remove empty last entry
         self.L.popitem()
+
+
+#Generating association rules with confidence at least c from the 
+# itemsets found in the first step.
+
+class Gen_aRules:
+
+    def __init__(self, L, conf):
+        self.conf = conf
+        self.L = L
+        self.rules = []
+
+    def check_conf(self,I,j): #conf(I->J) = sup(I u J)/sup(I)
+        if I/j >= self.conf: 
+            print(I,j, I/j)
+            return True
+        else:
+            return False
+
+    def run(self):
+
+        print(len(self.L))
+
+        k = 1
+        
+        while k < len(self.L):
+            print("k",k)
+
+            keys = self.L[k+1].keys()
+
+            print("keys",keys)
+            for i in keys:
+                print("i",i)
+                for item in itertools.combinations(i,k):
+                    for curr in i: 
+                        print(curr,"key", i)
+                        if curr not in item:
+                            basket = self.L[k+1][i]
+                            curr_item = self.L[k][item]
+
+                            if self.check_conf(basket,curr_item):
+                                self.rules.append([curr,item])
+            k +=1
