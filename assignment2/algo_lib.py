@@ -52,7 +52,7 @@ class Apriori:
                         C_k[ss]+=1
             # check support
             self.L[k] = {itemset:C_k[itemset] for itemset in sorted(C_k) if self.check_support(C_k[itemset])}
-        # remove empty last entry
+        # remove empty last entry, since in the last iteration none will be found
         self.L.popitem()
 
 

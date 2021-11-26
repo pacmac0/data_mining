@@ -3,6 +3,7 @@ import itertools
 from collections import defaultdict
 
 class GraphSample:
+    """ build separate class to use in both variants of the algorithm """
     def __init__(self):
         self.edges = set()
         self.node_neighbors = defaultdict(set) # containes set of conected nodes for each node(key)
@@ -14,16 +15,26 @@ class GraphSample:
         self.node_neighbors[v].add(u)
 
     def remove_edge(self, u, v):
-        self.edge_set.remove((u, v))
+        self.edges.remove((u, v))
         # running on undirected graphs so remove both directions
-        self.adj_list[u].remove(v)
-        self.adj_list[v].remove(u)
+        self.node_neighbors[u].remove(v)
+        self.node_neighbors[v].remove(u)
         # check if node has no neighbors anymore after removal
         if not self.node_neighbors[u]: del self.node_neighbors[u]
         if not self.node_neighbors[v]: del self.node_neighbors[v]
 
     def get_edges(self):
         return list(self.edges)
+
+    def get_node_neighbors(self, node):
+        return self.node_neighbors.get(node)
+
+    def has_node(self, node):
+        return node in self.node_neighbors
+
+
+    def has_edge(self, u, v):
+        return (u,v) in self.edges
 
 
 class TriestBase:
@@ -36,29 +47,53 @@ class TriestBase:
         self.graphSample = GraphSample()
 
     def updateCounters(self, operator, u, v):
+        # check if nodes exist or neighborhood union will fail (no triangle possible since no shared neighbors)
+        if not self.graphSample.has_node(u) or not self.graphSample.has_node(v): return
 
-        return 110
+        u_neighbors = self.graphSample.get_node_neighbors(u)
+        v_neighbors = self.graphSample.get_node_neighbors(v)
+        shared_neighborhood = u_neighbors.union(v_neighbors)
+        
+        # update the global and local counters of the shared neighborhood
+        if operator == '+':
+            increment_value = 1
+        else:
+            increment_value = -1
+        for c in shared_neighborhood:
+            self.global_counter += increment_value
+            self.local_counters[c] += increment_value
+            self.local_counters[u] += increment_value
+            self.local_counters[v] += increment_value
+
+        # in case of decrement check for 0 values and destroy them
+        if operator == '-':
+            for c in itertools.chain(shared_neighborhood, (u, v)): # check nodes and their neighborhood
+                if self.local_counters[c] == 0: del self.local_counters[c]
 
     def sampleEdge(self, u, v, t):
+        """ check if sample should be updated """
         if t <= self.M: return True
         elif random.random() < self.M/t: # coin flip
             # get random edge
             a, b = random.choice(self.graphSample.get_edges())
             # remove edge from sample
             self.graphSample.remove_edge(a,b)
-            self.updateCounters()
             # update counters -
+            self.updateCounters('-', u, v)
             return True
-        else
+        else:
             return False
-
 
     def run(self):
         t = 0
-        for u, v in edge_stream:
-            # TODO should we check if edge is already present in the graphSample?
+        for u, v in self.data_provider.load_data():
+            # TODO check if edge is already present in the graphSample?
+            if self.graphSample.has_edge(u, v):
+                continue
+
+
             t+=1
-            if self.sampleEdge(u,v,t)
+            if self.sampleEdge(u,v,t):
                 # add edge to sample
                 self.graphSample.add_edge(u,v)
                 # update counters +
