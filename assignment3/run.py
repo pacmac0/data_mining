@@ -8,7 +8,7 @@ from algo_lib import TriestBase, TriestImproved
 parser = argparse.ArgumentParser(description='Find/ estimate triangles in graph')
 parser.add_argument('-dataset-file', default='assignment3/dataset/undir_facebook_combined.txt', help='Path to the data file with edge per line')
 parser.add_argument('-M', default=5000, type=int, help='Edge sample size for reservoir')
-parser.add_argument('-improved', default=True, type=bool, help='Use the improved version of the algorithm')
+parser.add_argument('-improved', default=False, type=bool, help='Use the improved version of the algorithm')
 
 args = parser.parse_args()
 
