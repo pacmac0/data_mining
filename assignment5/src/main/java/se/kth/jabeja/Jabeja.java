@@ -19,6 +19,16 @@ public class Jabeja {
   private int round;
   private float T;
   private boolean resultFileCreated = false;
+  // our params
+  private String annealingPolicy = "LINEAR";
+  private Random random = new Random();
+  private boolean restartTemperature = false;
+  private int edgeCut = 0; // make edgeCut from report() global to use in restartTemperature()
+  private int roundsWithSameEdgeCut = 0; // used to determain temperature restart
+  private int prevEdgeCut = 0; // used to determain temperature restart
+  private int restartConvThreashold = 100;
+  private int allowedRestarts = 1;
+  private int restarts = 0;
 
   //-------------------------------------------------------------------
   public Jabeja(HashMap<Integer, Node> graph, Config config) {
@@ -28,6 +38,13 @@ public class Jabeja {
     this.numberOfSwaps = 0;
     this.config = config;
     this.T = config.getTemperature();
+    // our params
+    this.random.setSeed(config.getSeed());
+    this.annealingPolicy = "EXPONENTIAL"; // change for part 2, optins: LINEAR, EXPONENTIAL, IMPROVED
+    this.restartTemperature = true; // change for part 2.2, options true, false
+    this.restartConvThreashold = 100;
+    this.allowedRestarts = 1;
+    this.restarts = 0;
   }
 
 
@@ -42,6 +59,11 @@ public class Jabeja {
       //reduce the temperature
       saCoolDown();
       report();
+      if (restartTemperature && (restarts < allowedRestarts)) { // only do if configured
+        boolean restarted = restartTemperature();
+        if (restarted)
+          restarts++;
+      }
     }
   }
 
@@ -49,11 +71,20 @@ public class Jabeja {
    * Simulated analealing cooling function
    */
   private void saCoolDown(){
-    // TODO for second task
-    if (T > 1)
+    // TODO for second task (http://katrinaeg.com/simulated-annealing.html)
+    // T = T
+    // T_min = t_min = 0.00001 on website
+
+    // set t_min val
+    float t_min = annealingPolicy.equals("LINEAR") ? 1.0f : 0.00001f;
+
+    // non linear annealing cases (exponential)
+    if (T > t_min && !annealingPolicy.equals("LINEAR"))
+      T *= config.getDelta(); // update T with multiplication for exponential case
+    else if (T > t_min && annealingPolicy.equals("LINEAR")) // linear annealing
       T -= config.getDelta();
-    if (T < 1)
-      T = 1;
+    else
+      T = t_min;
   }
 
   /**
@@ -112,17 +143,67 @@ public class Jabeja {
       int dpq = getDegree(nodep, nodeq.getColor());
       int dqp = getDegree(nodeq, nodep.getColor());
       double new_val = Math.pow(dpq, alpha) + Math.pow(dqp, alpha);
+      
+      // rounds values
+      double round_benefit = 0;
+      boolean update = false;
       // update depending on annealing policy
-      if ((new_val * this.T > old_val) && (new_val > highestBenefit)) {
+      if (annealingPolicy.equals("LINEAR")) {
+        round_benefit = new_val;
+        update = (new_val * T > old_val);
+      } else {
+        double round_acceptanceProb = 0;
+        /* (http://katrinaeg.com/simulated-annealing.html)
+        $$ a = e^{\frac{c_{new} - c_{old}}{T}} $$
+        where $a$ is the acceptance probability, 
+        $(c_{new}-c_{old})$ is the difference between the new cost and the old one, 
+        $T$ is the temperature, 
+        and $e$ is 2.71828, that mathematical constant that pops up in all sorts of unexpected places.
+        */
+        // go through non linear cases
+        if(annealingPolicy.equals("EXPONENTIAL")) { // exponential annealing
+          round_acceptanceProb = Math.exp((new_val - old_val) / T);
+        } else if(annealingPolicy.equals("IMPROVED")) { // imporved annealing
+          
+          // TODO for bonus
+
+
+        } // else: stay 0
+        // set round values
+        round_benefit = round_acceptanceProb;
+        update = (round_acceptanceProb > random.nextDouble()) && (new_val != old_val); // catch case of (new - old = 0)
+      }
+      // update parameters if better option found
+      if (update && (round_benefit > highestBenefit)) {
         bestPartner = nodeq;
-        highestBenefit = new_val;
+        highestBenefit = round_benefit;
       }
     }
     return bestPartner;
   }
 
   /**
-   * The the degreee on the node based on color
+   * Restart temperature once edge-cut has converged, to possibly avoid local minimum
+   */
+  private boolean restartTemperature(){
+    // check edge-cut convergence, last x values
+    if (edgeCut == prevEdgeCut) {
+      roundsWithSameEdgeCut++;
+      if (roundsWithSameEdgeCut == restartConvThreashold) {
+        T = config.getTemperature(); // reset temperature to init
+        roundsWithSameEdgeCut = 0;
+        return true;
+      }
+    } else {
+      roundsWithSameEdgeCut = 0; // reset if edgeCut changes
+    }
+    // update prevEdgecut
+    prevEdgeCut = edgeCut;
+    return false;
+  }
+
+  /**
+   * The the degree on the node based on color
    * @param node
    * @param colorId
    * @return how many neighbors of the node have color == colorId
@@ -230,7 +311,7 @@ public class Jabeja {
       }
     }
 
-    int edgeCut = grayLinks / 2;
+    edgeCut = grayLinks / 2;
 
     logger.info("round: " + round +
             ", edge cut:" + edgeCut +

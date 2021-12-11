@@ -13,7 +13,7 @@ public class Config {
   private GraphInitColorPolicy initColorPolicy;
   private NodeSelectionPolicy nodeSelectionPolicy;
   private Float alpha;
-
+  
   public Config setAlpha(Float alpha) {
     this.alpha = alpha;
     return this;
