@@ -42,7 +42,7 @@ public class Jabeja {
     this.random.setSeed(config.getSeed());
     this.annealingPolicy = "EXPONENTIAL"; // change for part 2, optins: LINEAR, EXPONENTIAL, IMPROVED
     this.restartTemperature = true; // change for part 2.2, options true, false
-    this.restartConvThreashold = 100;
+    this.restartConvThreashold = 400;
     this.allowedRestarts = 1;
     this.restarts = 0;
   }
@@ -164,7 +164,7 @@ public class Jabeja {
         if(annealingPolicy.equals("EXPONENTIAL")) { // exponential annealing
           round_acceptanceProb = Math.exp((new_val - old_val) / T);
         } else if(annealingPolicy.equals("IMPROVED")) { // imporved annealing
-          
+            round_acceptanceProb = (Math.exp((new_val - old_val) / Math.exp(T)));
           // TODO for bonus
 
 
